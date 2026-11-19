@@ -293,6 +293,7 @@ html[data-bs-theme=dark] #lg::before{filter:brightness(.38) saturate(.85)}
 #uim .dropdown-item.on::after{content:"✓";margin-left:auto;padding-left:1rem;color:var(--acc);font-weight:700}
 @media(max-width:575px){.m-card:hover,.stats .s:hover{transform:none}}
 @media(prefers-reduced-motion:reduce){.m-card,.stats .s,.btn,.nav-link{transition:none!important;transform:none!important}.btn-close:hover{transform:none}}
+.por.sm .f .v.fit1{white-space:nowrap;text-overflow:clip}
 @media print{body>*:not(#por){display:none!important}#por{display:block!important}body{background:#fff!important}}
 @media(prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
@@ -569,24 +570,25 @@ function porHTML(x,P,cls){
  const sig=[r.b,fd(r.d)].filter(Boolean).join(" / ");
  return`<div class="por ${cls||""}"><div class="logo">XEROGRAFIX</div><div class="co">Business Products &amp; Services, Inc.</div><div class="ad">Lot Space #3 Manila Avenue, CBD Area, Subic Bay Freeport Zone 2222<br>Tele/ Fax No. (047) 252-5457/250-2043</div><div class="no">${esc(r.p)}</div>
  <h2>PROOF OF READING</h2>
- <div class="f"><span class="l">CUSTOMER NAME</span>:<span class="v">${esc(x.name)}</span></div>
- <div class="f"><span class="l">ADDRESS</span>:<span class="v">${esc(x.addr)}</span></div>
+ <div class="f"><span class="l">CUSTOMER NAME</span>:<span class="v fit1">${esc(x.name)}</span></div>
+ <div class="f"><span class="l">ADDRESS</span>:<span class="v fit1">${esc(x.addr)}</span></div>
  <div class="f"><span class="l">DATE</span>:<span class="v">${esc(fd(r.d))}</span></div>
- <div class="f"><span class="l">MODEL</span>:<span class="v">${esc(x.model)}</span><span style="margin-left:10px">SERIAL NO.</span>:<span class="v">${esc(x.serial)}</span></div>
+ <div class="f"><span class="l">MODEL</span>:<span class="v fit1">${esc(x.model)}</span><span style="margin-left:10px">SERIAL NO.</span>:<span class="v">${esc(x.serial)}</span></div>
  <table><tr><th style="width:31%">METER</th><th class="c">METER 1</th><th class="c">METER 2</th><th class="c">METER 3</th></tr>
  <tr><td>PRESENT READING</td>${c.map(v=>`<td class="n">${n(v)}</td>`).join("")}</tr>
  <tr><td>PREVIOUS READING</td>${p.map(v=>`<td class="n">${n(v)}</td>`).join("")}</tr>
  <tr><td>GROSS COPIES/PRINT</td>${g.map(v=>`<td class="n">${n(v)}</td>`).join("")}</tr></table>
- <div class="sg"><div><div class="cc" style="font-weight:700;font-size:15px;margin-bottom:4px">Certified Correct</div><div class="ln">${esc(sig)}</div><small>XEROGRAFIX Representative<br>Print Name / Signature / Date</small></div>
+ <div class="sg"><div><div class="cc" style="font-weight:700;font-size:15px;margin-bottom:4px">Certified Correct:</div><div class="ln">${esc(sig)}</div><small>XEROGRAFIX Representative<br>Print Name / Signature / Date</small></div>
  <div style="align-self:flex-end"><div class="ln"></div><small>Authorized Customer Representative<br>Print Name / Signature / Date</small></div></div></div>`;
 }
 /* Auto-fit: wrap or shrink long fields, then scale each form up or down to fill its box exactly. */
 function fitAll(){
  const root=$("#por");root.classList.add("measure");
  root.querySelectorAll(".pg>div").forEach(c=>{
-  c.querySelectorAll(".v").forEach(v=>{const g=getComputedStyle(v);let fs=parseFloat(g.fontSize);const min=fs*.55;while((v.scrollHeight>parseFloat(g.lineHeight)*2+1||v.scrollWidth>v.clientWidth+.5)&&fs>min){fs-=.3;v.style.fontSize=fs+"px"}});
+  const fv=()=>c.querySelectorAll(".v").forEach(v=>{const g=getComputedStyle(v);let fs=parseFloat(g.fontSize);if(!v.dataset.f0)v.dataset.f0=fs;const min=v.dataset.f0*(v.classList.contains("fit1")?.3:.55);while((v.scrollHeight>parseFloat(g.lineHeight)*2+1||v.scrollWidth>v.clientWidth+.5)&&fs>min){fs-=.3;v.style.fontSize=fs+"px"}});
+  fv();
   const cs=getComputedStyle(c),aw=c.clientWidth-parseFloat(cs.paddingLeft)-parseFloat(cs.paddingRight),ah=c.clientHeight-parseFloat(cs.paddingTop)-parseFloat(cs.paddingBottom),f=c.firstElementChild,k=Math.min(1.8,ah/f.offsetHeight);
-  if(Math.abs(k-1)>.01){f.style.margin="0";f.style.transformOrigin="0 0";f.style.transform="scale("+k+")";f.style.width=aw/k+"px"}
+  if(Math.abs(k-1)>.01){f.style.margin="0";f.style.transformOrigin="0 0";f.style.transform="scale("+k+")";f.style.width=aw/k+"px";fv()}
  });
  root.classList.remove("measure");
 }
