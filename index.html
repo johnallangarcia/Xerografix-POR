@@ -277,7 +277,7 @@ html[data-ui=retro] .app-f-main{border-top:2px solid var(--line);box-shadow:none
 .hi-1{font-family:var(--fd);font-weight:700;font-size:1.3rem;color:var(--ink)}
 .hi-2{font-size:.82rem;color:var(--mut)}
 /* year + month navigation stays pinned under the header; the filter bar stacks under it */
-.nv{position:sticky;top:var(--hh,0px);z-index:1025;background:linear-gradient(var(--bg) 82%,transparent);padding:.55rem 0 .6rem;margin-bottom:.2rem}
+.nv{position:sticky;top:var(--hh,0px);z-index:1025;background-color:var(--bg);background-image:var(--bgimg);background-size:var(--bgsz);background-attachment:fixed;margin:0 -.75rem .2rem;padding:.55rem .75rem .6rem;box-shadow:0 10px 14px -12px rgba(0,0,0,.28)}
 .sticky-f{top:calc(var(--hh,0px) + var(--nh,0px))!important}
 html{scroll-padding-top:calc(var(--hh,0px) + var(--nh,0px))}
 @media(max-width:575px){.sticky-f{position:static!important}}
@@ -611,7 +611,7 @@ function printAll(){
  doPrint(h,"letter landscape;margin:.33in","Proof of Reading - all - "+rl(st.p),1);
 }
 /* ---------- Customer forms (one multi-machine Proof of Reading per customer) ---------- */
-const CF0=[["Mikuni Terminals",/^MIKUNI TERMINALS/],["Gigamare Inc.",/^GIGAMARE( INC\.?)?/],["Gigaprofessional Partners Inc.",/^GIGAPROFESSIONAL PARTNERS( INC\.?)?/],["Aviation Concepts Technical Services, Inc.",/^(AVIATION|AVATION) CONCEPTS TECHNICAL SERVICES,?( INC\.?)?/],["Koryo Subic Inc.",/^KORYO SUBIC( INC\.?)?/],["Philippine Coastal Storage & Pipeline Corp.",/^PHIL(IPPINE|\.)? COASTAL STORAGE & PIPELINE CORP\.?/],["United Auctioneers Inc.",/^UNITED AUCTIONEERS( INC\.?)?/],["Bosch Home Comfort Philippines Inc.",/^BOSCH HOME COMFORT PHILIPPINES( INC\.?)?/],["Juken Sangyo Phils. Corp.",/^JUKEN SANGYO PHILS\.? CORP\.?/],["Nidec Subic Phils. Corp.",/^NIDEC SUBIC PHILS\.? CORP\.?/],["Subic Bay Yacht Club Inc.",/^SUBIC BAY YACHT CLUB( INC\.?)?/],["Microvan Inc.",/^MICROVAN( INC\.?)?/],["Polarmarine Inc.",/^POLARMARINE( INC\.?)?/],["Diorella Printshop International Corp.",/^DIORELLA PRINTSHOP INTERNATIONAL CORP\.?/]].map(a=>({n:a[0],re:a[1]}));
+const CF0=[["Mikuni Terminals Mechatronics Phils. Corp.",/^MIKUNI TERMINALS( MECHATRONICS)?( PHILS?\.?)?( CORP\.?)?/],["Gigamare Inc.",/^GIGAMARE( INC\.?)?/],["Gigaprofessional Partners Inc.",/^GIGAPROFESSIONAL PARTNERS( INC\.?)?/],["Aviation Concepts Technical Services, Inc.",/^(AVIATION|AVATION) CONCEPTS TECHNICAL SERVICES,?( INC\.?)?/],["Koryo Subic Inc.",/^KORYO SUBIC( INC\.?)?/],["Philippine Coastal Storage & Pipeline Corp.",/^PHIL(IPPINE|\.)? COASTAL STORAGE & PIPELINE CORP\.?/],["United Auctioneers Inc.",/^UNITED AUCTIONEERS( INC\.?)?/],["Bosch Home Comfort Philippines Inc.",/^BOSCH HOME COMFORT PHILIPPINES( INC\.?)?/],["Juken Sangyo Phils. Corp.",/^JUKEN SANGYO PHILS\.? CORP\.?/],["Nidec Subic Phils. Corp.",/^NIDEC SUBIC PHILS\.? CORP\.?/],["Subic Bay Yacht Club Inc.",/^SUBIC BAY YACHT CLUB( INC\.?)?/],["Microvan Inc.",/^MICROVAN( INC\.?)?/],["Polarmarine Inc.",/^POLARMARINE( INC\.?)?/],["Diorella Printshop International Corp.",/^DIORELLA PRINTSHOP INTERNATIONAL CORP\.?/]].map(a=>({n:a[0],re:a[1]}));
 /* Layout 2 customers = the built-in list + every customer added through "Add Machine Layout 2" (flagged layout=2 in the sheet, remembered on this device too). */
 const CF=CF0.slice();
 const lsCF=()=>{try{return JSON.parse(localStorage.getItem("xgx-cf2")||"[]")}catch(e){return[]}};
