@@ -442,7 +442,11 @@ const rec=(x,P)=>x.R[ps(P)]||(x.R[ps(P)]=blank());
 const val=(x,P,i)=>{const r=x.R[ps(P)];return r&&r.m[i]!=null?r.m[i]:null};
 const act=(x,P)=>{const f=pn(x.first),l=x.last?pn(x.last):null;return(f==null||P>=f)&&(l==null||P<=l)};
 const sd=x=>parseInt((x.sched||"").replace(/\D/g,""))||99;
-const rows=()=>DATA.filter(x=>act(x,st.p)).sort((a,b)=>sd(a)-sd(b)||a.id-b.id);
+/* customers are always listed A-Z (then by serial/id) */
+const COLL=new Intl.Collator("en",{numeric:true,sensitivity:"base"});
+const cname=x=>(x.name||"").replace(/\s+/g," ").trim();
+const byName=(a,b)=>COLL.compare(cname(a),cname(b))||COLL.compare(a.serial||"",b.serial||"")||a.id-b.id;
+const rows=()=>DATA.filter(x=>act(x,st.p)).sort(byName);
 function info(x,P){
  const p=[0,1,2].map(i=>val(x,P-1,i)),c=[0,1,2].map(i=>val(x,P,i));
  const u=p.map((a,i)=>a!=null&&c[i]!=null?c[i]-a:null),exp=p.map(a=>a!=null),n=exp.filter(Boolean).length,got=exp.filter((e,i)=>e&&c[i]!=null).length,fl=[];
@@ -476,8 +480,8 @@ function match(x){
 }
 function renderList(){
  let h="",g=null,n=0;
- const srch=ui.q.trim()!==""||ui.by!=="",src=srch?[...DATA].sort((a,b)=>sd(a)-sd(b)||a.id-b.id):rows();
- src.filter(match).forEach(x=>{if(x.sched!==g){g=x.sched;h+=`<div class="grp">${esc(g||"Unscheduled")}</div>`}h+=rowHTML(x);n++});
+ const srch=ui.q.trim()!==""||ui.by!=="",src=srch?[...DATA].sort(byName):rows();
+ src.filter(match).forEach(x=>{const L=(cname(x).charAt(0)||"#").toUpperCase(),k=/[A-Z]/.test(L)?L:"#";if(k!==g){g=k;h+=`<div class="grp">${esc(k)}</div>`}h+=rowHTML(x);n++});
  if(srch&&n)h=`<div class="small text-body-secondary mb-1">${n} machine${n>1?"s":""} found${ui.by?` read by ${esc(ui.by)}`:""} across all months and years. Readings shown are for ${rlf(st.p)}.</div>`+h;
  $("#list").innerHTML=n?h:`<div class="empty">${DATA.length?(ui.q.trim()?"No records match your search.":"No machines match your filters for "+rlf(st.p)+"."):"No machines yet."}<div class="mt-3"><button class="btn btn-primary" onclick="openForm(null)">＋ Add machine</button></div></div>`;
  stats();
@@ -608,7 +612,7 @@ function doPrint(html,size,title,fit){
 function printPOR(id,P){const x=by.get(id);doPrint(porHTML(x,P),"letter portrait;margin:12mm","Proof of Reading - "+x.name+" - "+rl(P))}
 /* Print all: every Layout 1 machine (customers on Layout 2 / Customer forms are excluded) in the current results that is active this month, 4 forms per Letter landscape page (2 x 2). */
 function printAll(){
- const srch=ui.q.trim()!==""||ui.by!=="",src=srch?[...DATA].sort((a,b)=>sd(a)-sd(b)||a.id-b.id):rows();
+ const srch=ui.q.trim()!==""||ui.by!=="",src=srch?[...DATA].sort(byName):rows();
  const L=src.filter(match).filter(x=>act(x,st.p)&&info(x,st.p).st!=="na"&&cfOf(x)<0);
  if(!L.length)return toast("No Layout 1 results to print for "+rlf(st.p),1);
  let h="";for(let i=0;i<L.length;i+=4)h+='<div class="pg">'+L.slice(i,i+4).map(x=>"<div>"+porHTML(x,st.p,"sm")+"</div>").join("")+"</div>";
@@ -628,6 +632,7 @@ function syncCF(){
 }
 const nrm=x=>x.name.toUpperCase().replace(/\s+/g," ").trim();
 const cfOf=x=>CF.findIndex(g=>g.re.test(nrm(x)));
+const cfOrder=()=>CF.map((g,i)=>i).sort((a,b)=>COLL.compare(CF[a].n,CF[b].n));
 const cfList=(g,P)=>DATA.filter(x=>g.re.test(nrm(x))&&act(x,P)).sort((a,b)=>a.id-b.id);
 const cfDept=(g,x)=>x.dept||nrm(x).replace(g.re,"").replace(/^[\s\-–\/.,]+/,"").trim();
 const cfN=x=>Math.max(1,...Object.values(x.R).map(r=>r.m.reduce((a,v,i)=>v!=null?i+1:a,0)));
@@ -651,11 +656,11 @@ function cfHTML(gi,P){
  <div class="cf-f"><div class="t">METER READER / COLLECTOR :</div><div class="s">${esc(sig)}</div><div class="b">Printed Name/Signature/Date</div></div></div></div>`;
 }
 function printCF(gi){const h=cfHTML(gi,st.p);if(!h)return toast("No active machines for "+CF[gi].n+" in "+rlf(st.p),1);doPrint(h,"letter portrait;margin:12mm","Proof of Reading - "+CF[gi].n+" - "+rl(st.p),"cf")}
-function printCFAll(){const h=CF.map((g,i)=>cfHTML(i,st.p)).join("");if(!h)return toast("No customer forms to print for "+rlf(st.p),1);doPrint(h,"letter portrait;margin:12mm","Proof of Reading - customer forms - "+rl(st.p),"cf")}
+function printCFAll(){const h=cfOrder().map(i=>cfHTML(i,st.p)).join("");if(!h)return toast("No customer forms to print for "+rlf(st.p),1);doPrint(h,"letter portrait;margin:12mm","Proof of Reading - customer forms - "+rl(st.p),"cf")}
 function openCF(){
  syncCF();
  $("#mCF .modal-content").innerHTML=`<div class="modal-header"><div><h2 class="modal-title h5">Print Form Layout 2</h2><div class="small text-body-secondary">One multi-machine Proof of Reading per customer · ${rlf(st.p)}</div></div><button class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
- <div class="modal-body p-0"><ul class="list-group list-group-flush">${CF.map((g,i)=>{const n=cfList(g,st.p).length;return`<li class="list-group-item d-flex align-items-center gap-2 bg-transparent"><div class="flex-grow-1"><div class="fw-semibold">${esc(g.n)}</div><div class="small text-body-secondary">${n} active machine${n===1?"":"s"}</div></div><button class="btn btn-sm btn-outline-primary" data-cf="${i}"${n?"":" disabled"}>🖨 Print form</button></li>`}).join("")}</ul></div>
+ <div class="modal-body p-0"><ul class="list-group list-group-flush">${cfOrder().map(i=>{const g=CF[i],n=cfList(g,st.p).length;return`<li class="list-group-item d-flex align-items-center gap-2 bg-transparent"><div class="flex-grow-1"><div class="fw-semibold">${esc(g.n)}</div><div class="small text-body-secondary">${n} active machine${n===1?"":"s"}</div></div><button class="btn btn-sm btn-outline-primary" data-cf="${i}"${n?"":" disabled"}>🖨 Print form</button></li>`}).join("")}</ul></div>
  <div class="modal-footer"><button class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button><button class="btn btn-primary fw-semibold" id="cfa">🖨 Print all customer forms</button></div>`;
  modal("#mCF").show();
 }
@@ -673,7 +678,7 @@ function alFill(){
 function openAL2(){
  syncCF();
  $("#mAL2 .modal-content").innerHTML=`<div class="modal-header"><div><h2 class="modal-title h5">Add Machine · Layout 2</h2><div class="small text-body-secondary">Same layout as the customer form · machines are added to ${rlf(st.p)}</div></div><button class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
- <div class="modal-body"><div class="row g-2 mb-3"><div class="col-md-8"><label class="form-label small fw-semibold">Customer name</label><select id="al-c" class="form-select">${CF.map((g,i)=>`<option value="${i}">${esc(g.n)}</option>`).join("")}<option value="__new__">＋ Other customer…</option></select><input id="al-cn" class="form-control mt-2 d-none" placeholder="Customer name" aria-label="New customer name"></div>
+ <div class="modal-body"><div class="row g-2 mb-3"><div class="col-md-8"><label class="form-label small fw-semibold">Customer name</label><select id="al-c" class="form-select">${cfOrder().map(i=>`<option value="${i}">${esc(CF[i].n)}</option>`).join("")}<option value="__new__">＋ Other customer…</option></select><input id="al-cn" class="form-control mt-2 d-none" placeholder="Customer name" aria-label="New customer name"></div>
  <div class="col-md-4"><label class="form-label small fw-semibold">Date</label><input type="date" id="al-d" class="form-control" value="${today()}"></div>
  <div class="col-12"><label class="form-label small fw-semibold">Address</label><input id="al-a" class="form-control"></div>
  <div class="col-md-6"><label class="form-label small fw-semibold">Contract</label>${dd("type","","Contract")}</div><div class="col-md-6"><label class="form-label small fw-semibold">Schedule</label>${dd("sched","","Schedule")}</div></div>
@@ -786,7 +791,7 @@ $("#lgc").onclick=()=>{$("#lgurl").classList.toggle("d-none");$("#lgu").value=cf
 $("#out").onclick=()=>doLogout("You have been signed out.");
 /* ---------- print select ---------- */
 const PS=new Set();
-const psList=()=>[...DATA].sort((a,b)=>sd(a)-sd(b)||a.id-b.id).filter(x=>act(x,st.p)&&info(x,st.p).st!=="na"&&cfOf(x)<0);
+const psList=()=>[...DATA].sort(byName).filter(x=>act(x,st.p)&&info(x,st.p).st!=="na"&&cfOf(x)<0);
 function psShown(){const q=$("#psq").value.trim().toLowerCase();return psList().filter(x=>!q||(x.name+" "+x.addr+" "+x.model+" "+x.serial).toLowerCase().includes(q))}
 function psDraw(){
  const L=psShown();
